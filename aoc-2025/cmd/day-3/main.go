@@ -2,10 +2,17 @@ package main
 
 import (
 	"log"
+	"math"
 	"os"
 	"strings"
 	"unicode"
 )
+
+func clear_nums(nums *[12]rune, x int) {
+	for i := x; i < 12; i++ {
+		nums[i] = '0'
+	}
+}
 
 func main() {
 	content, err := os.ReadFile("input.txt")
@@ -13,23 +20,30 @@ func main() {
 		return
 	}
 	lines := strings.Split(string(content), "\n")
-	result := 0
+	var result int64 = 0
 	for i, line := range lines {
-		maxNum := '0'
-		secondMax := '0'
+		if line == "" {
+			continue
+		}
+		var nums [12]rune
 		for j, c := range line {
 			if !unicode.IsDigit(c) {
 				log.Panicf("invalid digit in line %v", line)
 			}
-			if c > maxNum && j != len(line)-1 {
-				secondMax = '0'
-				maxNum = c
-			} else if c > secondMax {
-				secondMax = c
+			for x := 0; x < 12; x++ {
+				if c > nums[x] && len(line)-j >= 12-x {
+					clear_nums(&nums, x+1)
+					nums[x] = c
+					break
+				}
 			}
 		}
-		log.Printf("line %v | number is %v-%v", i, string(maxNum), string(secondMax))
-		result += int((maxNum-'0'))*10 + int((secondMax - '0'))
+		lineResult := 0
+		for i, v := range nums {
+			lineResult += int(v-'0') * int(math.Pow(10, float64(12-(i+1))))
+		}
+		result += int64(lineResult)
+		log.Printf("line %v | number is %v", i, lineResult)
 	}
 	log.Printf("result: %v", result)
 }
